@@ -2,10 +2,10 @@
 #include "vec.h"
 #include "circle.h"
 
-const int NUM_CIRCLES = 40;
-const float CIRCLE_SIZE = 25.0f;
+const int NUM_CIRCLES = 20;
+const float CIRCLE_SIZE = 20.0f;
 bool toggleGravity = false;
-float gravity = 1.2f;
+float gravity = 1.0f;
 bool intersecting = false;
 #define rnd() (float)rand() / (float)RAND_MAX
 
@@ -28,8 +28,8 @@ int main()
 {
 	srand(time(NULL));
 	for(int i=0; i<NUM_CIRCLES; i++) {
-		(g.c)[i] = Circle (g.xres*rnd(), g.yres*rnd(), CIRCLE_SIZE);
-				//(50*rnd())+20.0f);
+		(g.c)[i] = Circle (g.xres*rnd(), g.yres*rnd(),// CIRCLE_SIZE);
+				(50*rnd())+20.0f);
 	}
 	char title[] = {"Circle Simulation"};
 	(g.w).init(g.xres, g.yres, title);
@@ -84,8 +84,9 @@ void physics()
 			for(int j=i+1; j<NUM_CIRCLES; j++) {
 				Circle* p2 = &(g.c)[j];
 				IntersectData id = p1->intersectingCircle(*p2);
-				if(id.getIntersecting())
+				if(id.getIntersecting()) {
 					intersecting = true;
+				}
 				else
 					intersecting = false;
 			}
@@ -112,12 +113,11 @@ void render()
 {
 	for(int i=0; i<NUM_CIRCLES; i++) {
 		Circle* c = &(g.c)[i];
-		if(c->getOnGround()) {
-			(g.w).setColor(255, 255, 0);
-		}
-		else 
+		if(c->getOnGround())
 			(g.w).setColor(0, 255, 0);
-		(g.w).drawCircle(c->getCenter().x, c->getCenter().y, c->getRadius());
+		else 
+			(g.w).setColor(255, 255, 0);
+		(g.w).fillCircle(c->getCenter().x, c->getCenter().y, c->getRadius());
 	}
 }
 

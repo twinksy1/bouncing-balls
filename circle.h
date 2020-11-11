@@ -1,4 +1,5 @@
-#pragma once
+#ifndef CIRCLE_H
+#define CIRCLE_H
 #include "vec.h"
 #include "intersectData.h"
 
@@ -40,6 +41,11 @@ class Circle {
 		this->center = c.getCenter();
 		this->radius = c.getRadius();
 	}
+	float round(float& var)
+	{
+		float value = (int)(var * 100 + .5);
+		var = (float)value / 100;
+	}
 	// Collision
 	IntersectData intersectingCircle(Circle& c)
 	{
@@ -50,7 +56,6 @@ class Circle {
 			float penalty = centerDist-radiusDist;
 			float cradius = c.getRadius();
 			Vec2f ccenter = c.getCenter();
-			//float maxR = cradius > radius ? cradius : radius;
 			if(center.x < ccenter.x) {
 				center = center + Vec2f (penalty, penalty);
 				c.setCenter(ccenter - Vec2f (penalty, penalty));
@@ -62,13 +67,16 @@ class Circle {
 			float cdy = c.getDy();
 			float tmpx = dx;
 			float tmpy = dy;
+
 			if(cradius == radius) {
+				// Same masses just exchange velocities
 				c.setDx(tmpx);
 				c.setDy(tmpy);
 				dx = cdx;
 				dy = cdy;
 			}
 			else {
+				// Physics formula
 				float newDx1 = ((radius-cradius)/(radius+cradius))*tmpx +
 					((2*cradius)/(radius+cradius))*cdx;
 				float newDx2 = ((2*radius)/(radius+cradius))*tmpx +
@@ -77,10 +85,10 @@ class Circle {
 					((2*cradius)/(radius+cradius))*cdy;
 				float newDy2 = ((2*radius)/(radius+cradius))*tmpy +
 					((cradius-radius)/(radius+cradius))*cdy;
-				dx = newDx1;
-				dy = newDy1;
-				c.setDx(newDx2);
-				c.setDy(newDy2);
+				dx = round(newDx1);
+				dy = round(newDy1);
+				c.setDx(round(newDx2));
+				c.setDy(round(newDy2));
 			}
 			if(center.x >= bounds.x && center.y >= bounds.y) {
 				center.y -= bounds.y / 10;
@@ -89,10 +97,6 @@ class Circle {
 				center.y -= bounds.y / 10;
 				center.x += bounds.x / 10;
 			}
-			//c.setDx(cdx);
-			//c.setDy(cdy);
-			//dx *= penalty * (maxR/cradius);
-			//dy *= penalty * (maxR/cradius);
 			return IntersectData(true, centerDist - radiusDist);
 		}
 		else
@@ -117,17 +121,20 @@ class Circle {
 	// Movement
 	void move(float xbounds, float ybounds, bool toggleGravity=false, float gravity=1.2)
 	{
-		if(dy < -0.5 || dy > 0.5) onGround = false;
+		// Whether this circle is on the floor
+		if(dy < -0.1 || dy > 0.1) onGround = false;
+		else if(dy > -0.1 && dy < 0.1 && toggleGravity) onGround = true;
 		if((int)center.y < (int)ybounds-(int)radius-1) onGround = false;
+		if(!toggleGravity) onGround = false;
+		
 		bounds = Vec2f (xbounds, ybounds);
+		// Limiting max velocity
 		if(dy > MAX_VEL) dy = MAX_VEL;
 		else if(dy < -MAX_VEL) dy = -MAX_VEL;
 		if(dx > MAX_VEL) dx = MAX_VEL;
 		else if(dx < -MAX_VEL) dx = -MAX_VEL;
 		
-		//if(!onGround) std::cout << this << ": " << dy << std::endl;
-		if(dy == -0.497368f || dy == -0.497369f) onGround = true;
-
+		// Adding constant gravity force
 		if(toggleGravity) {
 			if(!onGround)
 				dy += gravity;
@@ -135,7 +142,6 @@ class Circle {
 				dy = 0.0f;
 		}
 
-		//std::cout << dy << std::endl;
 		center += Vec2f (dx, dy);
 		// Rolling forward/backward
 		if(dx < 0) {
@@ -145,13 +151,14 @@ class Circle {
 			dx -= deacc;
 			angle -= deacc;
 		}
+		round(dx);
 		// Falling down/gravity
 		if(dy < 0) {
 			dy += deacc;
 		} else if(dy > 0) {
 			dy -= deacc;
 		}
-
+		round(dy);
 		// Check if on screen
 		if(center.x-radius < 0) {
 			center.x = radius;
@@ -174,3 +181,5 @@ class Circle {
 		}
 	}
 };
+
+#endif

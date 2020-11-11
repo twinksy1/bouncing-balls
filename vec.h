@@ -1,4 +1,6 @@
-#pragma once
+#ifndef VEC_H
+#define VEC_H
+
 #include <iostream>
 class Vec2f {
 	public:
@@ -76,3 +78,5 @@ class Vec2f {
 		length = sqrt(x*x + y*y);
 	}
 };
+
+#endif

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef INTERSECTDATA_H
+#define INTERSECTDATA_H
 
 class IntersectData {
 	private:
@@ -11,3 +12,5 @@ class IntersectData {
 	const bool getIntersecting() { return intersecting; }
 	const float getDistance() { return distance; }
 };
+
+#endif

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef RENDERING_H
+#define RENDERING_H
 #include <SDL2/SDL.h>
 
 class Window {
@@ -93,7 +94,7 @@ class Window {
 		rect.h = h;
 		SDL_RenderFillRect(rend, &rect);
 	}
-	void createCircle(int xc, int yc, int x, int y) 
+	void drawArc(int xc, int yc, int x, int y) 
 	{ 
 		drawPoint(xc+x, yc+y); 
 		drawPoint(xc-x, yc+y); 
@@ -108,7 +109,7 @@ class Window {
 	{ 
 		int x = 0, y = r; 
 		int d = 3 - 2 * r; 
-		createCircle(xc, yc, x, y); 
+		drawArc(xc, yc, x, y); 
 		while (y >= x) { 
 			// for each pixel we will 
 			// draw all eight pixels 
@@ -124,7 +125,37 @@ class Window {
 			} 
 			else
 			    d = d + 4 * x + 6; 
-			createCircle(xc, yc, x, y); 
+			drawArc(xc, yc, x, y); 
+		} 
+	}
+	void fillArc(int xc, int yc, int x, int y) 
+	{ 
+		drawLine(xc+x, yc+y, xc-x, yc+y); 
+		drawLine(xc+x, yc-y, xc-x, yc-y); 
+		drawLine(xc+y, yc+x, xc-y, yc+x); 
+		drawLine(xc+y, yc-x, xc-y, yc-x); 
+	}
+	void fillCircle(int xc, int yc, int r) 
+	{ 
+		int x = 0, y = r; 
+		int d = 3 - 2 * r; 
+		fillArc(xc, yc, x, y); 
+		while (y >= x) { 
+			// for each pixel we will 
+			// draw all eight pixels 
+			  
+			x++; 
+
+			// check for decision parameter 
+			// and correspondingly  
+			// update d, x, y 
+			if (d > 0) { 
+			    y--;  
+			    d = d + 4 * (x - y) + 10; 
+			} 
+			else
+			    d = d + 4 * x + 6; 
+			fillArc(xc, yc, x, y); 
 		} 
 	}
 
@@ -153,3 +184,4 @@ class Window {
 	   */
 };
 
+#endif
