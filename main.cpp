@@ -2,8 +2,8 @@
 #include "vec.h"
 #include "circle.h"
 
-const int NUM_CIRCLES = 20;
-const float CIRCLE_SIZE = 20.0f;
+const int NUM_CIRCLES = 4;
+const float CIRCLE_SIZE = 50.0f;
 bool toggleGravity = false;
 float gravity = 1.0f;
 bool intersecting = false;
@@ -12,8 +12,8 @@ bool intersecting = false;
 struct Global {
 	Window w;
 	Circle c[NUM_CIRCLES];
-	int xres = 3000;
-	int yres = 2000;
+	int xres;
+	int yres;
 };
 
 Global g;
@@ -26,23 +26,16 @@ void physics();
 
 int main()
 {
+	g.xres = 800;
+	g.yres = 800;
 	srand(time(NULL));
 	for(int i=0; i<NUM_CIRCLES; i++) {
-		(g.c)[i] = Circle (g.xres*rnd(), g.yres*rnd(),// CIRCLE_SIZE);
-				(50*rnd())+20.0f);
+		(g.c)[i] = Circle (g.xres*rnd(), g.yres*rnd(), CIRCLE_SIZE);
+				//(50*rnd())+20.0f);
 	}
 	char title[] = {"Circle Simulation"};
 	(g.w).init(g.xres, g.yres, title);
 	bool leave = false;
-/*
-	Circle tmp(10.0f, 10.0f, 5.0f);
-	IntersectData p1 = tmp.intersectingPoint(5.0f, 10.0f);
-	IntersectData p2 = tmp.intersectingPoint(0.0f, 0.0f);
-	std::cout << "Point 1 intersecting: " << p1.getIntersecting() <<
-		", Distance: " << p1.getDistance() << std::endl;
-	std::cout << "Point 2 intersecting: " << p2.getIntersecting() <<
-		", Distance: " << p2.getDistance() << std::endl;
-*/
 	while(!leave) {
 		SDL_Event e;
 		checkMouse(e);
@@ -52,25 +45,6 @@ int main()
 		(g.w).postRender();
 		physics();
 	}
-/*
-	Circle c1(Vec2f (25.0f, 30.0f), 20.0f);
-	std::cout << c1.getCenter() << ", Radius: " << c1.getRadius() << std::endl;
-	Circle c2(Vec2f (45.0f, 30.0f), 20.0f);
-	std::cout << c2.getCenter() << ", Radius: " << c2.getRadius() << std::endl;
-	Circle c3(Vec2f (25.0f, 300.0f), 20.0f);
-	std::cout << c3.getCenter() << ", Radius: " << c3.getRadius() << std::endl;
-
-	IntersectData c1ic2 = c1.intersectingCircle(c2);
-	IntersectData c1ic3 = c1.intersectingCircle(c3);
-	IntersectData c2ic3 = c2.intersectingCircle(c3);
-
-	std::cout << "Circle1 intersect Circle2: " << c1ic2.getIntersecting() <<
-		", Distance: " << c1ic2.getDistance() << std::endl;
-	std::cout << "Circle1 intersect Circle3: " << c1ic3.getIntersecting() <<
-		", Distance: " << c1ic3.getDistance() << std::endl;
-	std::cout << "Circle2 intersect Circle3: " << c2ic3.getIntersecting() <<
-		", Distance: " << c2ic3.getDistance() << std::endl;
-*/
 	return 0;
 }
 
@@ -113,11 +87,11 @@ void render()
 {
 	for(int i=0; i<NUM_CIRCLES; i++) {
 		Circle* c = &(g.c)[i];
-		if(c->getOnGround())
+		if(c->onGround)
 			(g.w).setColor(0, 255, 0);
 		else 
 			(g.w).setColor(255, 255, 0);
-		(g.w).fillCircle(c->getCenter().x, c->getCenter().y, c->getRadius());
+		(g.w).fillCircle(c->center.x, c->center.y, c->radius);
 	}
 }
 
@@ -174,10 +148,9 @@ void checkMouse(SDL_Event e)
 			Vec2f mousePos((float)mousex, (float)mousey);
 			for(int i=0; i<NUM_CIRCLES; i++) {
 				Circle* p = &(g.c)[i];
-				Vec2f dist = p->getCenter() - mousePos;
+				Vec2f dist = p->center - mousePos;
 				if(dist.length <= mouseBang) {
-					p->setDx(MAX_VEL*dist.x);
-					p->setDy(MAX_VEL*dist.y);
+					p->addForce(MAX_VEL*dist.x, MAX_VEL*dist.y);
 				}
 			}
 		}
