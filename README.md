@@ -15,3 +15,5 @@ Execution: ***./main***
 * Push balls by bumping the mouse into them
 * Left-click to create a force that pushes all nearby balls outward
 * Quick program termination by pressing 'Esc'
+## GIF OF PROGRAM EXECUTION
+![GIF](./BouncingBalls.gif)
