@@ -30,15 +30,22 @@ void Circle::addForce(float x, float y)
 }
 float Circle::round(float var)
 {
-    float value = (int)(var * 100 + .5);
-    var = (float)value / 100;
-    return var;
+    int value = (int)(var * 100);
+    var = value / 100;
+    return (float)var;
+}
+void Circle::init(float x, float y, const float r)
+{
+    radius = r;
+    center.x = x;
+    center.y = y;
+    onGround = false;
 }
 // Collision
 IntersectData Circle::intersectingCircle(Circle& c)
 {
     float radiusDist = this->radius + c.radius;
-    float scalar = 0.05f;
+    float scalar = 0.03f;
     Vec2f slope = this->center - c.center;
     float centerDist = slope.length;
 
@@ -49,12 +56,30 @@ IntersectData Circle::intersectingCircle(Circle& c)
             c.vel = c.vel * scalar;
             swap(this->vel.x, c.vel.x);
             swap(this->vel.y, c.vel.y);
+            // Push them out  of each other's radii
+            addForce(slope.x * scalar, slope.y * scalar);
+            c.addForce(-slope.x * scalar, -slope.y * scalar);
         } else {
+            // Different masses, use physics formula
+            Vec2f v1i = this->vel;
+            Vec2f v2i = c.vel;
 
+            Vec2f v1f;
+            Vec2f v2f;
+            // New velocity of first mass
+            v1f.x = (this->radius - c.radius)/(c.radius + this->radius) * v1i.x + (2 * c.radius)/(c.radius + this->radius) * v2i.x;
+            v1f.y = (this->radius - c.radius)/(c.radius + this->radius) * v1i.y + (2 * c.radius)/(c.radius + this->radius) * v2i.y;
+            // New velocity of second mass
+            v2f.x = (2 * this->radius)/(c.radius + this->radius) * v1i.x + (c.radius - this->radius)/(c.radius + this->radius) * v2i.x;
+            v2f.y = (2 * this->radius)/(c.radius + this->radius) * v1i.y + (c.radius - this->radius)/(c.radius + this->radius) * v2i.y;
+            // Set new velocities
+            this->vel = v1f;
+            c.vel = v2f;
+            float ratio1 = this->radius / c.radius * scalar;
+            float ratio2 = c.radius / this->radius * scalar;
+            addForce(slope.x * ratio2, slope.y * ratio2);
+            c.addForce(-slope.x * ratio1, -slope.y * ratio1);
         }
-        // Push them out  of each other's radii
-        addForce(slope.x * scalar, slope.y * scalar);
-        c.addForce(-slope.x * scalar, -slope.y * scalar);
         return IntersectData(true, centerDist - radiusDist);
     }
     return IntersectData(false, centerDist - radiusDist);
@@ -106,20 +131,30 @@ void Circle::move(float xbounds, float ybounds, bool toggleGravity, float gravit
     }
     if(vel.y != 0.0f) {
         if(center.y + vel.y + radius >= ybounds) {
-            vel.y -= (center.y + vel.y + radius) - ybounds;
-            if(round(vel.y) == -round(gravity)) {
-                onGround = true;
-                vel.y = 0.0f;
-                center.y = ybounds - radius;
+            if(toggleGravity) {
+                vel.y -= (center.y + vel.y + radius) - ybounds;
+                if(vel.y <= gravity) {
+                    center.y = ybounds - radius;
+                    vel.y = 0.0f;
+                    onGround = true;
+                } else {
+                    center.y -= vel.y;
+                    vel.y *= -1;
+                    onGround = false;
+                }
             } else {
+                onGround = false;
+                vel.y -= (center.y + vel.y + radius) - ybounds;
                 center.y -= vel.y;
                 vel.y *= -1;
             }
         } else if(center.y + vel.y - radius <= 0) {
+            onGround = false;
             vel.y += 0 - (center.y + vel.y - radius);
             center.y += vel.y;
             vel.y *= -1;
         } else {
+            onGround = false;
             center.y += vel.y;
         }
     }

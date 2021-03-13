@@ -17,12 +17,13 @@ public:
 	Circle();
 	Circle(Vec2f point, const float r);
 	Circle(float x, float y, const float r);
+	void init(float x, float y, const float r);
 	void operator=(Circle c);
 	void addForce(float x, float y);
 	float round(float var);
 	IntersectData intersectingCircle(Circle& c);
 	IntersectData intersectingPoint(float x, float y);
-	void move(float xbounds, float ybounds, bool toggleGravity=false, float gravity=1.2);
+	void move(float xbounds, float ybounds, bool toggleGravity=false, float gravity=0.05);
 };
 
 #endif
