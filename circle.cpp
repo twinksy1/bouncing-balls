@@ -22,6 +22,9 @@ void Circle::operator=(Circle c)
 {
     this->center = c.center;
     this->radius = c.radius;
+    this->vel = c.vel;
+    this->force = c.force;
+    this->onGround = c.onGround;
 }
 void Circle::addForce(float x, float y)
 {
@@ -45,15 +48,15 @@ void Circle::init(float x, float y, const float r)
 IntersectData Circle::intersectingCircle(Circle& c)
 {
     float radiusDist = this->radius + c.radius;
-    float scalar = 0.03f;
+    float scalar = 0.01f;
     Vec2f slope = this->center - c.center;
     float centerDist = slope.length;
 
     if(radiusDist >= centerDist) {
         if(this->radius == c.radius) {
-            // Same mass, just swap velocities
-            this->vel = this->vel * scalar;
+            vel = vel * scalar;
             c.vel = c.vel * scalar;
+            // Same mass, just swap velocities
             swap(this->vel.x, c.vel.x);
             swap(this->vel.y, c.vel.y);
             // Push them out  of each other's radii
@@ -61,8 +64,8 @@ IntersectData Circle::intersectingCircle(Circle& c)
             c.addForce(-slope.x * scalar, -slope.y * scalar);
         } else {
             // Different masses, use physics formula
-            Vec2f v1i = this->vel;
-            Vec2f v2i = c.vel;
+            Vec2f v1i = this->vel * scalar;
+            Vec2f v2i = c.vel * scalar;
 
             Vec2f v1f;
             Vec2f v2f;
@@ -75,10 +78,12 @@ IntersectData Circle::intersectingCircle(Circle& c)
             // Set new velocities
             this->vel = v1f;
             c.vel = v2f;
-            float ratio1 = this->radius / c.radius * scalar;
-            float ratio2 = c.radius / this->radius * scalar;
-            addForce(slope.x * ratio2, slope.y * ratio2);
-            c.addForce(-slope.x * ratio1, -slope.y * ratio1);
+            float scalarx = 0.02f;
+            float scalary = 0.05f;
+            float ratio1 = (this->radius / c.radius);
+            float ratio2 = (c.radius / this->radius);
+            addForce(slope.x * ratio2 * scalarx, slope.y * ratio2 * scalary);
+            c.addForce(-slope.x * ratio1 * scalarx, -slope.y * ratio1 * scalary);
         }
         return IntersectData(true, centerDist - radiusDist);
     }
@@ -118,59 +123,57 @@ void Circle::move(float xbounds, float ybounds, bool toggleGravity, float gravit
     // Erase all force
     force.x = force.y = 0.0;
     // Move within bounds
-    if(vel.x != 0.0f) {
-        if(center.x + vel.x + radius >= xbounds) {
-        center.x -= (center.x + vel.x + radius) - xbounds;
+    if(center.x + vel.x + radius >= xbounds) {
+    center.x -= (center.x + vel.x + radius) - xbounds;
+    vel.x *= -1;
+    } else if(center.x + vel.x - radius <= 0) {
+        center.x += 0 - (center.x + vel.x - radius);
         vel.x *= -1;
-        } else if(center.x + vel.x - radius <= 0) {
-            center.x += 0 - (center.x + vel.x - radius);
-            vel.x *= -1;
-        } else {
-            center.x += vel.x;
-        }
+    } else {
+        center.x += vel.x;
     }
-    if(vel.y != 0.0f) {
-        if(center.y + vel.y + radius >= ybounds) {
-            if(toggleGravity) {
-                vel.y -= (center.y + vel.y + radius) - ybounds;
-                if(vel.y <= gravity) {
-                    center.y = ybounds - radius;
-                    vel.y = 0.0f;
-                    onGround = true;
-                } else {
-                    center.y -= vel.y;
-                    vel.y *= -1;
-                    onGround = false;
-                }
+
+
+    if(center.y + vel.y + radius >= ybounds) {
+        if(toggleGravity) {
+            if(vel.y <= gravity) {
+                center.y = ybounds - radius;
+                vel.y = 0.0f;
+                onGround = true;
             } else {
-                onGround = false;
-                vel.y -= (center.y + vel.y + radius) - ybounds;
-                center.y -= vel.y;
+                center.y += vel.y;
                 vel.y *= -1;
+                onGround = false;
             }
-        } else if(center.y + vel.y - radius <= 0) {
-            onGround = false;
-            vel.y += 0 - (center.y + vel.y - radius);
-            center.y += vel.y;
-            vel.y *= -1;
         } else {
             onGround = false;
+            center.y = ybounds - radius;
+            vel.y *= -1;
             center.y += vel.y;
         }
+    } else if(center.y + vel.y - radius <= 0) {
+        onGround = false;
+        center.y = radius;
+        vel.y *= -1;
+        center.y += vel.y;
+    } else {
+        onGround = false;
+        center.y += vel.y;
     }
+
     // Deacceleration
     float deaccX = vel.x > 0 ? -DEACC : DEACC;
     float deaccY = vel.y > 0 ? -DEACC : DEACC;
     if(toggleGravity && deaccY > 0) {
         // Only deaccelerate if going up
         vel.y += deaccY;
-    } else {
+    } else if(!toggleGravity) {
         vel.y += deaccY;
     }
     if(vel.x != 0) {
         vel.x += deaccX;
     }
-    
+    // Handle off screen
     if(center.y < 0 || center.y > ybounds || center.x < 0 || center.x > xbounds) {
         center.x = xbounds / 2.0f;
         center.y = -radius;

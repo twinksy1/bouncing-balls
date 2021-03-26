@@ -92,14 +92,14 @@ public:
 		}
 		if(curButton != NULL) {
 			switch (curButton->getValue()) {
-				case 0:
+				case TOGGLE_GRAVITY:
 					toggleGravity ^= 1;
 					break;
-				case 1:
+				case ADD_CIRCLE:
 					// Add circle
 					addCircle();
 					break;
-				case 2:
+				case REM_CIRCLE:
 					// Remove last circle
 					remCircle();
 					break;
@@ -111,6 +111,7 @@ public:
 	}
 	void render()
 	{
+		// Render circles
 		for(int i=0; i<numCircles; i++) {
 			Circle* cur = &(c)[i];
 			if(cur->onGround)
@@ -119,23 +120,37 @@ public:
 				w.setColor(255, 255, 0);
 			w.fillCircle(cur->center.x, cur->center.y, cur->radius);
 		}
+		// Render menu
 		gravityAmount->render(w);
 		for(int i=0; i<NUM_BUTTONS; i++) {
 			Button<int>* cur = &buttons[i];
 			switch (cur->getValue()) {
-				case 0:
+				case TOGGLE_GRAVITY:
 					w.setColor(200, 200, 200);
+					w.fillRect(cur->getX(), cur->getY(), cur->getWidth(), cur->getHeight());
+					if(!toggleGravity) w.setColor(255,0,0);
+					else w.setColor(0, 255, 0);
+					if(cur->isHighlighted()) w.setColor(255,255,0);
+					w.fillCircle((2 * cur->getX() + cur->getWidth()) / 2, (2 * cur->getY() + cur->getHeight()) / 2, cur->getWidth() / 3);
 					break;
-				case 1:
+				case ADD_CIRCLE:
 					w.setColor(0, 255, 0);
+					w.fillRect(cur->getX(), cur->getY(), cur->getWidth(), cur->getHeight());
+					if(cur->isHighlighted()) w.setColor(255,255,0);
+					else w.setColor(255,255,255);
+					w.fillRect((cur->getX() + (cur->getX() + cur->getWidth())) / 2 - 5, cur->getY() + 5, 10, cur->getHeight() - 10);
+					w.fillRect(cur->getX() + 5, (cur->getY() + (cur->getY() + cur->getHeight())) / 2 - 5, cur->getWidth() - 10, 10);
 					break;
-				case 2:
+				case REM_CIRCLE:
 					w.setColor(255, 0, 0);
+					w.fillRect(cur->getX(), cur->getY(), cur->getWidth(), cur->getHeight());
+					if(cur->isHighlighted()) w.setColor(255,255,0);
+					else w.setColor(255,255,255);
+					w.fillRect(cur->getX() + 5, (cur->getY() + (cur->getY() + cur->getHeight())) / 2 - 5, cur->getWidth() - 10, 10);
 					break;
 				default:
 					break;
 			}
-			w.fillRect(cur->getX(), cur->getY(), cur->getWidth(), cur->getHeight());
 		}
 	}
 } g;
@@ -143,8 +158,8 @@ public:
 void init()
 {
 	std::cout << "Creating window\n";
-	g.xres = 800;
-	g.yres = 800;
+	g.xres = 700;
+	g.yres = 700;
 	char title[] = {"Circle Simulation"};
 	(g.w).init(g.xres, g.yres, title);
 	std::cout << "Initializing circles\n";
@@ -254,6 +269,10 @@ void checkMouse(SDL_Event e)
 	if(e.type == SDL_MOUSEMOTION) {
 		// Mouse moved
 		SDL_GetMouseState(&g.mousex, &g.mousey);
+		for(int i=0; i<NUM_BUTTONS; i++) {
+			Button<int>* cur = &g.buttons[i];
+			if(cur->checkMouse(g.mousex, g.mousey)) break;
+		}
 		for(int i=0; i<g.numCircles; i++) {
 			Circle* p = &(g.c)[i];
 			IntersectData id = p->intersectingPoint((float)g.mousex, (float)g.mousey);

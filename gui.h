@@ -9,6 +9,7 @@ class Button {
 private:
     int x,y;
     float w,h;
+    bool highlighted;
     T val;
 public:
     Button();
@@ -20,6 +21,7 @@ public:
     int getY();
     float getWidth();
     float getHeight();
+    bool isHighlighted();
     T getValue();
 };
 

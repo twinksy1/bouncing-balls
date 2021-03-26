@@ -87,7 +87,7 @@ int Slider<T>::getLastX() {
 
 template <class T>
 Button<T>::Button() {
-
+    this->highlighted = false;
 }
 template <class T>
 Button<T>::Button(int x,int y,float w,float h,T val) {
@@ -96,6 +96,7 @@ Button<T>::Button(int x,int y,float w,float h,T val) {
     this->w = w;
     this->h = h;
     this->val = val;
+    this->highlighted = false;
 }
 template <class T>
 Button<T>::~Button() {
@@ -108,12 +109,15 @@ void Button<T>::init(int x,int y,float w,float h,T val) {
     this->w = w;
     this->h = h;
     this->val = val;
+    this->highlighted = false;
 }
 template <class T>
 bool Button<T>::checkMouse(int mousex,int mousey) {
     if(mousex >= x && mousex <= x + w && mousey >= y && mousey <= y + h) {
+        this->highlighted = true;
         return true;
     } else {
+        this->highlighted = false;
         return false;
     }
 }
@@ -128,6 +132,10 @@ int Button<T>::getY() {
 template <class T>
 T Button<T>::getValue() {
     return val;
+}
+template <class T>
+bool Button<T>::isHighlighted() {
+    return highlighted;
 }
 template <class T>
 float Button<T>::getWidth() {
